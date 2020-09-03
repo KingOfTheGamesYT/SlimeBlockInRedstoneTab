@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.fabricmc.api.ModInitializer;
+import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.item.ItemGroup;
@@ -14,14 +14,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
-public class SlimeBlockInRedstoneMod implements ModInitializer {
+public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 
+	public static final Map<Identifier, ItemGroup> TAG_MAP = new HashMap<Identifier, ItemGroup>();
 	private static final Map<String, ItemGroup> GROUP_MAP = generateGroupMap();
 	public static final Map<Identifier, ItemGroup> ITEM_MAP = generateItemMap();
-
-	@Override
-	public void onInitialize() {
-	}
 
 	private static Map<String, ItemGroup> generateGroupMap() {
 		Map<String, ItemGroup> groupMap = new HashMap<String, ItemGroup>();
@@ -40,13 +37,12 @@ public class SlimeBlockInRedstoneMod implements ModInitializer {
 				String[] lines = file.split("\\n");
 
 				for (String line : lines) {
-					if (line.trim().startsWith("#")) {
+					String[] parts = line.split(":");
+					if (line.trim().startsWith("//") || parts.length != 4) {
 						continue;
 					}
-
-					String[] parts = line.split(":");
-
-					FabricItemGroupBuilder.build(new Identifier(parts[0].trim(), parts[1].trim()),
+					FabricItemGroupBuilder.build(
+							new Identifier(parts[0].trim().toLowerCase(), parts[1].trim().toLowerCase()),
 							() -> new ItemStack(Registry.ITEM.get(new Identifier(parts[2].trim(), parts[3].trim()))));
 				}
 				stream.close();
@@ -58,8 +54,8 @@ public class SlimeBlockInRedstoneMod implements ModInitializer {
 			try {
 				groupConfigFile.createNewFile();
 				FileOutputStream stream = new FileOutputStream(groupConfigFile);
-				stream.write(("# Format:\n" + "# your_namespace:group : namespace:logo_item").getBytes());
-				stream.write(("\nslimeblock:SLIMEBLOCK.DOORS : minecraft:oak_door").getBytes());
+				stream.write(("// Format:\n" + "// your_namespace:group : namespace:logo_item\n").getBytes());
+				stream.write(("\nslimeblock:DOORS : minecraft:oak_door").getBytes());
 				stream.close();
 
 				return generateGroupMap();
@@ -68,7 +64,6 @@ public class SlimeBlockInRedstoneMod implements ModInitializer {
 		}
 
 		for (ItemGroup group : ItemGroup.GROUPS) {
-			System.out.println(group.getName().toUpperCase());
 			groupMap.put(group.getName().toUpperCase(), group);
 		}
 		return groupMap;
@@ -83,13 +78,13 @@ public class SlimeBlockInRedstoneMod implements ModInitializer {
 			if (!itemConfigFile.exists()) {
 				itemConfigFile.createNewFile();
 				FileOutputStream stream = new FileOutputStream(itemConfigFile);
-				stream.write("# Format:\n# namespace:item : (NAMESPACE).GROUP\n#\n".getBytes());
-				stream.write("# Possible groups:\n".getBytes());
+				stream.write("// Format:\n// namespace:item : (NAMESPACE).GROUP\n\n".getBytes());
+				stream.write("// Possible groups:\n".getBytes());
 				for (String key : GROUP_MAP.keySet()) {
-					stream.write(("# " + key + "\n").getBytes());
+					stream.write(("// " + key + "\n").getBytes());
 				}
-				stream.write("#\n".getBytes());
-				stream.write("minecraft:slime_block : REDSTONE".getBytes());
+				stream.write("\nminecraft:slime_block : REDSTONE".getBytes());
+				stream.write("\nminecraft:honey_block : REDSTONE".getBytes());
 
 				String[] types = new String[] { "spruce", "birch", "jungle", "acacia", "dark_oak", "crimson",
 						"warped" };
@@ -116,13 +111,19 @@ public class SlimeBlockInRedstoneMod implements ModInitializer {
 				String[] lines = file.split("\\n");
 
 				for (String line : lines) {
-					if (line.trim().startsWith("#")) {
+					String[] parts = line.split(":");
+					if (line.trim().startsWith("//") || parts.length != 3) {
 						continue;
 					}
 
-					String[] parts = line.split(":");
-					itemMap.put(new Identifier(parts[0].trim(), parts[1].trim()),
-							GROUP_MAP.getOrDefault(parts[2].trim().toUpperCase(), null));
+					if (parts[0].trim().startsWith("#")) {
+						TAG_MAP.put(
+								new Identifier(parts[0].trim().substring(1, parts[0].trim().length()), parts[1].trim()),
+								GROUP_MAP.getOrDefault(parts[2].trim().toUpperCase(), null));
+					} else {
+						itemMap.put(new Identifier(parts[0].trim(), parts[1].trim()),
+								GROUP_MAP.getOrDefault(parts[2].trim().toUpperCase(), null));
+					}
 				}
 				stream.close();
 			}
@@ -133,4 +134,9 @@ public class SlimeBlockInRedstoneMod implements ModInitializer {
 
 		return itemMap;
 	}
+
+	@Override
+	public void onInitializeClient() {
+	}
+
 }

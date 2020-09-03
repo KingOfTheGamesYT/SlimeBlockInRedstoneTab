@@ -13,11 +13,11 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/slimeblockredstone/icon.png",
+  "icon": "assets/slimeblock/icon.png",
 
   "environment": "*",
   "entrypoints": {
-    "main": [
+    "client": [
       "com.oroarmor.slimeblockredstone.SlimeBlockInRedstoneMod"
     ]
   },
