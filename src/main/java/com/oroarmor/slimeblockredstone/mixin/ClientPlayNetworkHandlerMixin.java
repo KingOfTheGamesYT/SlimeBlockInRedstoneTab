@@ -1,6 +1,5 @@
 package com.oroarmor.slimeblockredstone.mixin;
 
-import java.util.Collection;
 import java.util.Map.Entry;
 
 import org.spongepowered.asm.mixin.Final;
@@ -30,6 +29,8 @@ public abstract class ClientPlayNetworkHandlerMixin {
 	@SuppressWarnings("unused")
 	@Inject(method = "onSynchronizeTags", at = @At("RETURN"), cancellable = true)
 	private void updateItemGroups(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
+		SlimeBlockInRedstoneMod.reload();
+
 		for (Entry<RegistryKey<Item>, Item> entry : Registry.ITEM.getEntries()) {
 
 			Item item = entry.getValue();
@@ -37,21 +38,13 @@ public abstract class ClientPlayNetworkHandlerMixin {
 
 			for (Entry<Identifier, ItemGroup> tagEntry : SlimeBlockInRedstoneMod.TAG_MAP.entrySet()) {
 				boolean hasItemTag = tagManager.items().getTagsFor(item).contains(tagEntry.getKey());
-
-				Collection<Identifier> tagIter = tagManager.items().getTagsFor(item);
-				for (Identifier ider : tagIter) {
-					System.out.println(item + " : " + ider);
-				}
-				if (!tagIter.isEmpty())
-					System.out.println(tagEntry.getKey() + " : " + hasItemTag);
-
 				if (hasItemTag) {
 					if (tagEntry.getValue() == null) {
 						return;
 					}
 					((ItemGroupAccessor) item).setGroup(tagEntry.getValue());
+					break;
 				}
-
 			}
 
 			if (SlimeBlockInRedstoneMod.ITEM_MAP.containsKey(id)) {

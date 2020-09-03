@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "Slime Block in Redstone Tab",
-  "description": "Puts the slime block into the redstone tab, where it belongs.",
+  "description": "This mod allows you to move around items in the creative inventory to different and newly created tabs.",
   "authors": [
     "OroArmor"
   ],
@@ -22,7 +22,7 @@
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "slimeblockredstone.mixins.json"
   ],
 
   "depends": {

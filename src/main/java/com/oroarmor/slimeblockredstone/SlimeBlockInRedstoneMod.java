@@ -3,6 +3,7 @@ package com.oroarmor.slimeblockredstone;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,12 +17,12 @@ import net.minecraft.util.registry.Registry;
 
 public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 
-	public static final Map<Identifier, ItemGroup> TAG_MAP = new HashMap<Identifier, ItemGroup>();
-	private static final Map<String, ItemGroup> GROUP_MAP = generateGroupMap();
-	public static final Map<Identifier, ItemGroup> ITEM_MAP = generateItemMap();
+	public static Map<Identifier, ItemGroup> TAG_MAP = new HashMap<>();
+	private static Map<String, ItemGroup> GROUP_MAP = generateGroupMap();
+	public static Map<Identifier, ItemGroup> ITEM_MAP = generateItemMap();
 
 	private static Map<String, ItemGroup> generateGroupMap() {
-		Map<String, ItemGroup> groupMap = new HashMap<String, ItemGroup>();
+		Map<String, ItemGroup> groupMap = new HashMap<>();
 
 		File groupConfigFile = new File(FabricLoader.getInstance().getConfigDirectory().getAbsolutePath(),
 				"slimeblock_group_config.txt");
@@ -41,9 +42,13 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 					if (line.trim().startsWith("//") || parts.length != 4) {
 						continue;
 					}
-					FabricItemGroupBuilder.build(
-							new Identifier(parts[0].trim().toLowerCase(), parts[1].trim().toLowerCase()),
-							() -> new ItemStack(Registry.ITEM.get(new Identifier(parts[2].trim(), parts[3].trim()))));
+
+					Identifier groupId = new Identifier(parts[0].trim().toLowerCase(), parts[1].trim().toLowerCase());
+					if (!Arrays.stream(ItemGroup.GROUPS).map(ItemGroup::getId).anyMatch(
+							s -> s.equals(parts[0].trim().toLowerCase() + "." + parts[1].trim().toLowerCase()))) {
+						FabricItemGroupBuilder.build(groupId, () -> new ItemStack(
+								Registry.ITEM.get(new Identifier(parts[2].trim(), parts[3].trim()))));
+					}
 				}
 				stream.close();
 
@@ -55,11 +60,12 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 				groupConfigFile.createNewFile();
 				FileOutputStream stream = new FileOutputStream(groupConfigFile);
 				stream.write(("// Format:\n" + "// your_namespace:group : namespace:logo_item\n").getBytes());
-				stream.write(("\nslimeblock:DOORS : minecraft:oak_door").getBytes());
+				stream.write("\nslimeblock:DOORS : minecraft:oak_door".getBytes());
 				stream.close();
 
 				return generateGroupMap();
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -72,7 +78,7 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 	private static Map<Identifier, ItemGroup> generateItemMap() {
 		File itemConfigFile = new File(FabricLoader.getInstance().getConfigDirectory().getAbsolutePath(),
 				"slimeblock_item_config.txt");
-		Map<Identifier, ItemGroup> itemMap = new HashMap<Identifier, ItemGroup>();
+		Map<Identifier, ItemGroup> itemMap = new HashMap<>();
 
 		try {
 			if (!itemConfigFile.exists()) {
@@ -85,19 +91,7 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 				}
 				stream.write("\nminecraft:slime_block : REDSTONE".getBytes());
 				stream.write("\nminecraft:honey_block : REDSTONE".getBytes());
-
-				String[] types = new String[] { "spruce", "birch", "jungle", "acacia", "dark_oak", "crimson",
-						"warped" };
-				String[] blocks = new String[] { "trapdoor", "fence_gate", "button", "door", "pressure_plate" };
-
-				for (String type : types) {
-					for (String block : blocks) {
-						stream.write(("\nminecraft:" + type + "_" + block + " : SLIMEBLOCK.DOORS").getBytes());
-					}
-				}
-
-				stream.write("\nminecraft:polished_blackstone_button : SLIMEBLOCK.DOORS".getBytes());
-				stream.write("\nminecraft:polished_blackstone_pressure_plate : SLIMEBLOCK.DOORS".getBytes());
+				stream.write("\n#slimeblock:extra_redstone_items : SLIMEBLOCK.DOORS".getBytes());
 
 				stream.close();
 				return generateItemMap();
@@ -133,6 +127,12 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 		}
 
 		return itemMap;
+	}
+
+	public static void reload() {
+		TAG_MAP = new HashMap<>();
+		GROUP_MAP = generateGroupMap();
+		ITEM_MAP = generateItemMap();
 	}
 
 	@Override
