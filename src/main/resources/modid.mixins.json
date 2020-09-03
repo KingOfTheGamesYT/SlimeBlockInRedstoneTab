@@ -6,7 +6,8 @@
   "mixins": [
   ],
   "client": [
-	"ItemsMixin"
+	"ItemsMixin",
+	"ItemGroupAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
