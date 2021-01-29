@@ -136,6 +136,7 @@ task modrinthFabric (type: TaskModrinthUpload){
 	uploadFile = remapJar.archivePath // This is the java jar task
 	changelog = System.getenv("RELEASE_LOG")
 	addLoader('fabric')
+	addGameVersion("1.16.5")
 }
 
 
