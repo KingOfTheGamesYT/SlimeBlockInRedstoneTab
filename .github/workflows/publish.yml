@@ -20,7 +20,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew curseforge uploadBintray modrinthFabric --parallel --stacktrace
+        run: ./gradlew curseforge bintrayUpload modrinthFabric --parallel --stacktrace
         env:
           BINTRAY_USER: oroarmor
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
