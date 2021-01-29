@@ -16,7 +16,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
 public class SlimeBlockInRedstoneMod implements ClientModInitializer {
-
 	public static Map<Identifier, ItemGroup> TAG_MAP = new HashMap<>();
 	private static Map<String, ItemGroup> GROUP_MAP = generateGroupMap();
 	public static Map<Identifier, ItemGroup> ITEM_MAP = generateItemMap();
@@ -24,7 +23,7 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 	private static Map<String, ItemGroup> generateGroupMap() {
 		Map<String, ItemGroup> groupMap = new HashMap<>();
 
-		File groupConfigFile = new File(FabricLoader.getInstance().getConfigDirectory().getAbsolutePath(),
+		File groupConfigFile = new File(FabricLoader.getInstance().getConfigDir().toFile(),
 				"slimeblock_group_config.txt");
 
 		if (groupConfigFile.exists()) {
@@ -44,7 +43,7 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 					}
 
 					Identifier groupId = new Identifier(parts[0].trim().toLowerCase(), parts[1].trim().toLowerCase());
-					if (!Arrays.stream(ItemGroup.GROUPS).map(ItemGroup::getId).anyMatch(
+					if (!Arrays.stream(ItemGroup.GROUPS).map(ItemGroup::getName).anyMatch(
 							s -> s.equals(parts[0].trim().toLowerCase() + "." + parts[1].trim().toLowerCase()))) {
 						FabricItemGroupBuilder.build(groupId, () -> new ItemStack(
 								Registry.ITEM.get(new Identifier(parts[2].trim(), parts[3].trim()))));
@@ -76,7 +75,7 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 	}
 
 	private static Map<Identifier, ItemGroup> generateItemMap() {
-		File itemConfigFile = new File(FabricLoader.getInstance().getConfigDirectory().getAbsolutePath(),
+		File itemConfigFile = new File(FabricLoader.getInstance().getConfigDir().toFile(),
 				"slimeblock_item_config.txt");
 		Map<Identifier, ItemGroup> itemMap = new HashMap<>();
 
@@ -138,5 +137,4 @@ public class SlimeBlockInRedstoneMod implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 	}
-
 }

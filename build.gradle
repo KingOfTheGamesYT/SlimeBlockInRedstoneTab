@@ -1,6 +1,10 @@
 plugins {
-	id 'fabric-loom' version '0.4-SNAPSHOT'
+	id 'fabric-loom' version '0.6-SNAPSHOT'
+	id 'com.jfrog.bintray' version "1.8.4"
+	id "com.matthewprenger.cursegradle" version "1.4.0"
 	id 'maven-publish'
+	id "maven"
+	id "com.modrinth.minotaur" version "1.1.0"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -21,11 +25,9 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	modRuntime "com.github.jellysquid3:sodium-fabric:mc1.16.1-0.1.0"
-	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-	// You may need to force-disable transitiveness on them.
+	["fabric-api-base", "fabric-item-groups-v0", "fabric-resource-loader-v0"].forEach {
+		include(modImplementation(fabricApi.module(it, project.fabric_version)))
+	}
 }
 
 processResources {
@@ -80,3 +82,60 @@ publishing {
 		// mavenLocal()
 	}
 }
+
+bintray {
+	user = System.getenv('BINTRAY_USER')
+	key = System.getenv('BINTRAY_KEY')
+	publications = ["mavenJava"]
+	publish = true
+	pkg {
+		repo = 'oroarmor'
+		name = rootProject.archives_base_name
+		userOrg = "oroarmor"
+		licenses = ['CC0-1.0']
+		vcsUrl = 'https://github.com/OroArmor/SlimeBlockInRedstoneTab.git'
+		version {
+			name = rootProject.mod_version
+		}
+	}
+}
+
+curseforge {
+	if (System.getenv("CURSE_API_KEY") != null) {
+		apiKey = System.getenv("CURSE_API_KEY")
+		project {
+			id = "397597"
+			releaseType = "release"
+			addGameVersion "Java 8"
+			addGameVersion "Fabric"
+			changelogType = "html"
+			changelog = System.getenv("RELEASE_LOG")
+			relations {
+				requiredDependency "fabric-api"
+			}
+			mainArtifact(remapJar.archivePath) {
+				displayName = "Slime block in the Redstone Tab - ${project.mod_version}"
+			}
+			afterEvaluate {
+				uploadTask.dependsOn("build")
+			}
+		}
+	}
+	options {
+		forgeGradleIntegration = false
+		javaVersionAutoDetect = false
+	}
+}
+
+import com.modrinth.minotaur.TaskModrinthUpload
+
+task modrinthFabric (type: TaskModrinthUpload){
+	token = System.getenv("MODRINTH_TOKEN") // Use an environment property!
+	projectId = 'iHObj4gK'
+	versionNumber = "Slime block in the Redstone Tab - ${project.mod_version}"
+	uploadFile = remapJar.archivePath // This is the java jar task
+	changelog = System.getenv("RELEASE_LOG")
+	addLoader('fabric')
+}
+
+

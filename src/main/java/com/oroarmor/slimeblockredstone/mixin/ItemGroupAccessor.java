@@ -8,7 +8,6 @@ import net.minecraft.item.ItemGroup;
 
 @Mixin(Item.class)
 public interface ItemGroupAccessor {
-
 	@Accessor("group")
-	public void setGroup(ItemGroup group);
+	void setGroup(ItemGroup group);
 }

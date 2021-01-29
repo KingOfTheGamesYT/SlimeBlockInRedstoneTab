@@ -15,7 +15,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
-import net.minecraft.tag.RegistryTagManager;
+import net.minecraft.tag.TagManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -24,20 +24,18 @@ import net.minecraft.util.registry.RegistryKey;
 public abstract class ClientPlayNetworkHandlerMixin {
 	@Shadow
 	@Final
-	private RegistryTagManager tagManager;
+	private TagManager tagManager;
 
-	@SuppressWarnings("unused")
 	@Inject(method = "onSynchronizeTags", at = @At("RETURN"), cancellable = true)
 	private void updateItemGroups(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
 		SlimeBlockInRedstoneMod.reload();
 
 		for (Entry<RegistryKey<Item>, Item> entry : Registry.ITEM.getEntries()) {
-
 			Item item = entry.getValue();
 			Identifier id = entry.getKey().getValue();
 
 			for (Entry<Identifier, ItemGroup> tagEntry : SlimeBlockInRedstoneMod.TAG_MAP.entrySet()) {
-				boolean hasItemTag = tagManager.items().getTagsFor(item).contains(tagEntry.getKey());
+				boolean hasItemTag = tagManager.getItems().getTagsFor(item).contains(tagEntry.getKey());
 				if (hasItemTag) {
 					if (tagEntry.getValue() == null) {
 						return;
